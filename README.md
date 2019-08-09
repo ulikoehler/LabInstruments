@@ -42,7 +42,7 @@ This example connects to a Rigol DL3021 and configures it correctly.
 
 Be sure to insert your specific PyVISA ID in the example!
 
-Place this script in the directory where the LabInstruments directory is located.
+Place this script in the directory where the `LabInstruments` directory is located.
 
 ```
 #!/usr/bin/env python3
@@ -50,7 +50,7 @@ import visa
 from LabInstruments.DL3000 import DL3000
 
 rm = visa.ResourceManager()
-inst = DL3021(rm.open_resource('USB0::6833::3601::DL3A204800938::0::INSTR'))
+inst = DL3021(rm.open_resource('USB0::6833::3601::DL3A204100212::0::INSTR'))
 # Reset to factory settings (always do this to ensure a 100% consistent state)
 inst.reset()
 
@@ -60,7 +60,13 @@ inst.enable() # Switch ON
 # Read voltage
 print("{} V".format(inst.voltage()))
 inst.disable() # Switch OFF
+```
 
+I recommend you add `LabInstruments` to your project as a `git submodule`:
+
+```sh
+git submodule init
+git submodule add https://github.com/ulikoehler/LabInstruments.git LabInstruments
 ```
 
 ## Troubleshooting
