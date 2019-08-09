@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import struct
+from collections import namedtuple
 
 __all__ = ["DSOX3000"]
 
@@ -118,6 +119,19 @@ class DSOX3000(object):
         """
         self.inst.write(":TIMEBASE:SCALE {}".format(scale))
 
+    def acquisition_type(self, typ):
+        """
+        Set the acquisition type:
+        NORMAL | AVERAGE | HRES | PEAK
+        """
+        self.inst.write(":ACQUIRE:TYPE {}".format(typ))
+        
+    def acquisition_type_normal(self):
+        self.acquisition_type("NORMAL")
+
+    def acquisition_type_normal(self):
+        self.acquisition_type("HRES")
+    
     def screenshot_png(self):
         """
         Create a PNG screenshot
@@ -131,12 +145,14 @@ class DSOX3000(object):
         mode: "NORMAL" | "MAXIMUM" | "RAW"
         """
         self.inst.write(":WAVEFORM:FORMAT WORD") # binary WORD transfer
+        self.inst.write(":WAVEFORM:UNSIGNED ON") # unsigned data transfer
+        self.inst.write(":WAVEFORM:BYTEORDER MSBFirst") # Little endian
         self.inst.write(":WAVEFORM:SOURCE {}".format(src))
         self.inst.write(":WAVEFORM:POINTS:MODE {}".format(mode))
         self.inst.write(":WAVEFORM:POINTS 8000000".format()) # binary WORD transfer
         self.inst.write(":DIGITIZE {}".format(src))
 
-    def waveform_data_raw(self):
+    def waveform_data(self):
         """
         Retrieve acquired waveform data
         Call waveform_acquire() before this!!
@@ -144,7 +160,6 @@ class DSOX3000(object):
         preamble = self.inst.query(":WAVEFORM:PREAMBLE?")
         fmt, typ, pnts, count, xinc, xorigin, xreference, yincrement, yorigin, yreference = preamble.strip().split(",")
         # Parse preamble
-        # NOTE: fmt is always WORD, type no care
         pnts = int(pnts)
         count = int(count)
         xinc = float(xinc)
@@ -153,10 +168,32 @@ class DSOX3000(object):
         yincrement = float(yincrement)
         yorigin = float(yorigin)
         yreference = int(yreference)
+
+        preamble = DSOX3000Preamble(pnts, count, xinc, xorigin, xreference, yincrement, yorigin, yreference)
         # Request actual data
-        data = self.inst.query_binary_values(":WAVEFORM:DATA?", datatype='h', container=np.ndarray)
+        data = self.inst.query_binary_values(":WAVEFORM:DATA?", datatype='H', container=np.ndarray, is_big_endian=True)
         # TODO postprocess data with preamble information
-        return data
+        return preamble, data
 
     def reset(self):
         self.inst.write("*RST")
+
+DSOX3000Preamble = namedtuple("DSOX3000Preamble", [
+    "pnts",
+    "count",
+    "xinc",
+    "xorigin",
+    "xreference",
+    "yincrement",
+    "yorigin",
+    "yreference",
+])
+
+def postprocess_dsox3000_data(preamble, data):
+    """
+    Postprocess binary data from a DSOX3000 series scope
+    Generates NumPy (x, y) data where x in seconds and Y is in the channel unit (usually volts)
+    """
+    x = np.arange(y.shape[0]) * preamble.xinc + preamble.xorigin
+    y = (arr - preamble.yreference) * preamble.yincrement + preamble.yorigin
+    return x, y
