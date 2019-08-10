@@ -21,13 +21,17 @@ class DSOX3000(object):
         """
         Enable the given channel
         """
-        self.inst.write(":VIEW CHAN{}".format(chan))
+        if isinstance(chan, int):
+            chan = "CHAN{}".format(chan)
+        self.inst.write(":VIEW {}".format(chan))
     
     def disable_channel(self, chan):
         """
         Enable the given channel
         """
-        self.inst.write(":BLANK CHAN{}".format(chan))
+        if isinstance(chan, int):
+            chan = "CHAN{}".format(chan)
+        self.inst.write(":BLANK {}".format(chan))
 
     def autoscale(self, chan):
         """
@@ -67,6 +71,12 @@ class DSOX3000(object):
         Set the trigger source (numeric channel)
         """
         self.trigger_source("CHAN{}".format(ch))
+
+    def trigger_sweep(self, mode="NORMAL"):
+        """
+        Set the trigger sweep: NORMAL | AUTO
+        """
+        self.inst.write(":TRIGGER:SWEEP {}".format(mode))
 
     def trigger_slope(self, slope):
         """
@@ -138,7 +148,7 @@ class DSOX3000(object):
         """
         return self.inst.query_binary_values(":DISP:DATA? PNG", datatype='s', delay=1)[0]
 
-    def waveform_acquire(self, src, mode="RAW"):
+    def waveform_configure(self, src, mode="RAW", npoints="8000000"):
         """
         Acquire waveform data and store in memory so it
         src: "CHAN<n>" | "FUNC" | "MATH" | "SBUS1" | "SBUS2"
@@ -149,8 +159,13 @@ class DSOX3000(object):
         self.inst.write(":WAVEFORM:BYTEORDER MSBFirst") # Little endian
         self.inst.write(":WAVEFORM:SOURCE {}".format(src))
         self.inst.write(":WAVEFORM:POINTS:MODE {}".format(mode))
-        self.inst.write(":WAVEFORM:POINTS 8000000".format()) # binary WORD transfer
+        self.inst.write(":WAVEFORM:POINTS {}".format(npoints)) # binary WORD transfer
+
+    def waveform_digitize(self, src):
         self.inst.write(":DIGITIZE {}".format(src))
+    
+    def trigger_occured(self):
+        return self.inst.query(":TER?").strip() == "+1"
 
     def waveform_data(self):
         """
@@ -172,7 +187,6 @@ class DSOX3000(object):
         preamble = DSOX3000Preamble(pnts, count, xinc, xorigin, xreference, yincrement, yorigin, yreference)
         # Request actual data
         data = self.inst.query_binary_values(":WAVEFORM:DATA?", datatype='H', container=np.ndarray, is_big_endian=True)
-        # TODO postprocess data with preamble information
         return preamble, data
 
     def reset(self):
@@ -194,6 +208,6 @@ def decode_dsox3000_data(preamble, data):
     Postprocess binary data from a DSOX3000 series scope
     Generates NumPy (x, y) data where x in seconds and Y is in the channel unit (usually volts)
     """
+    y = (data.astype(np.int32) - preamble.yreference) * preamble.yincrement + preamble.yorigin
     x = np.arange(y.shape[0]) * preamble.xinc + preamble.xorigin
-    y = (arr - preamble.yreference) * preamble.yincrement + preamble.yorigin
     return x, y
