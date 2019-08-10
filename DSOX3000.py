@@ -189,7 +189,7 @@ DSOX3000Preamble = namedtuple("DSOX3000Preamble", [
     "yreference",
 ])
 
-def postprocess_dsox3000_data(preamble, data):
+def decode_dsox3000_data(preamble, data):
     """
     Postprocess binary data from a DSOX3000 series scope
     Generates NumPy (x, y) data where x in seconds and Y is in the channel unit (usually volts)
