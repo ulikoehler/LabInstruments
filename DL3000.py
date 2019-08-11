@@ -28,6 +28,10 @@ class DL3000(object):
     def resistance(self):
         # My DL3021 returns a string like '0.000067\n0'
         return float(self.inst.query(":MEAS:RES?").partition("\n")[0])
+
+    def set_cc_slew_rate(self, slew):
+        # My DL3021 returns a string like '0.000067\n0'
+        self.inst.write(f":SOURCE:CURRENT:SLEW {slew}")
     
     def is_enabled(self):
         """
