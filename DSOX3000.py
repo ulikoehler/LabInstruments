@@ -3,7 +3,7 @@ import numpy as np
 import struct
 from collections import namedtuple
 
-__all__ = ["DSOX3000"]
+__all__ = ["DSOX3000", "decode_dsox3000_data"]
 
 class DSOX3000(object):
     """

@@ -81,5 +81,23 @@ class DL3000(object):
         """
         return self.inst.query(":SOURCE:POWER:ILIM {}".format(ilim))
 
+    def cc(self, current, activate=True):
+        """
+        One-line constant-current configuration.
+        if activate == True, also turns on the power supply
+        """
+        self.set_mode("CC")
+        self.set_cc_current(current)
+        self.enable()
+        
+    def cp(self, power, activate=True):
+        """
+        One-line constant-current configuration.
+        if activate == True, also turns on the power supply
+        """
+        self.set_mode("CP")
+        self.set_cp_power(power)
+        self.enable()
+
     def reset(self):
         return self.inst.write("*RST")
