@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import visa
-rm = visa.ResourceManager()
+import pyvisa
+rm = pyvisa.ResourceManager()
 
 resources = rm.list_resources()
 
