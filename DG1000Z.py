@@ -126,5 +126,59 @@ class DG1000Z(object):
         Set the given channel to an arbitrary waveform with the given high and low voltages
         """
         amplitude = high_voltage - low_voltage
-        offset = 0.5 * amplitude + low_voltage
+        offset = (high_voltage + low_voltage) / 2.0
         self.inst.write(f":SOURCE{channel}:APPL:ARB {samplerate},{amplitude},{offset}")
+        
+    def set_arb_mode(self, channel, mode: Literal['FREQ', 'SRATE']):
+        """
+        Set the given channel's arbitrary mode.
+        """
+        self.inst.write(f":SOURCE{channel}:FUNC:ARB:MODE {mode}")
+        
+    def set_burst_period(self, channel, period="100ms"):
+        """
+        Set the given channel's burst period.
+        """
+        self.inst.write(f":SOURCE{channel}:BURST:INTERNAL:PERIOD {period}")
+        
+    def set_burst_mode(self, channel, mode: Literal['TRIGGERED', 'INFINITY', 'GATED']):
+        """
+        Set the given channel's burst mode.
+        """
+        self.inst.write(f":SOURCE{channel}:BURST:MODE {mode}")
+        
+    def set_burst_ncycles(self, channel, ncycles=1000):
+        """
+        Set the given channel's burst number of cycles.
+        """
+        self.inst.write(f":SOURCE{channel}:BURST:NCYCLES {ncycles}")
+        
+    def set_arb_samplerate(self, channel, samplerate="100MSa/s"):
+        """
+        Set the given channel's arbitrary samplerate.
+        """
+        self.inst.write(f":SOURCE{channel}:FUNC:ARB:SRATE {samplerate}")
+        
+    def set_burst_enabled(self, channel, enabled=True):
+        """
+        Enable the given channel's burst mode.
+        """
+        self.inst.write(f":SOURCE{channel}:BURST:STATE {'ON' if enabled else 'OFF'}")
+        
+    def set_burst_delay(self, channel, delay="0s"):
+        """
+        Set the given channel's burst delay.
+        """
+        self.inst.write(f":SOURCE{channel}:BURST:TDELAY {delay}")
+        
+    def burst_trigger_now(self, channel):
+        """
+        Trigger a burst now
+        """
+        self.inst.write(f":SOURCE{channel}:BURST:TRIGGER:IMMEDIATE")
+        
+    def set_burst_trigger_source(self, channel, source: Literal['INTERNAL', 'EXTERNAL', 'MANUAL']):
+        """
+        Set the given channel's burst trigger source.
+        """
+        self.inst.write(f":SOURCE{channel}:BURST:TRIGGER:SOURCE {source}")
