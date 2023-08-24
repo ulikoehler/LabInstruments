@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from typing import Literal
+from UliEngineering.EngineerIO import normalize_numeric
 __all__ = ["DL3000"]
 
 class DG1000Z(object):
@@ -85,7 +86,8 @@ class DG1000Z(object):
         """
         Set the given channel's pulse frequency.
         """
-        self.inst.write(f":SOURCE{channel}:FUNC:PULSE:FREQ {frequency}")
+        period = 1.0 / normalize_numeric(frequency)
+        self.inst.write(f":SOURCE{channel}:FUNC:PULSE:PERIOD {period}s")
         
     def set_low_voltage_level(self, channel, voltage="0.0V"):
         """
@@ -106,3 +108,23 @@ class DG1000Z(object):
         self.inst.write(f":SOURCE{channel}:VOLT:LOW {low}")
         self.inst.write(f":SOURCE{channel}:VOLT:HIGH {high}")
         
+    def set_channel_dc(self, channel, voltage="0.0V"):
+        """
+        Set the given channel to DC mode with the given voltage.
+        """
+        self.inst.write(f":SOURCE{channel}:APPLY:DC DEF,DEF,{voltage}")
+        
+    def set_volatile_waveform(self, channel, waveform: list[float]):
+        """
+        Set the given channel to a volatile waveform with the given voltages
+        """
+        waveform_str = ",".join([str(v) for v in waveform])
+        self.inst.write(f":SOURCE{channel}:DATA VOLATILE,{waveform_str}")
+        
+    def set_channel_arbitrary(self, channel, samplerate="100MSa/s", high_voltage=5.0, low_voltage=0.0):
+        """
+        Set the given channel to an arbitrary waveform with the given high and low voltages
+        """
+        amplitude = high_voltage - low_voltage
+        offset = 0.5 * amplitude + low_voltage
+        self.inst.write(f":SOURCE{channel}:APPL:ARB {samplerate},{amplitude},{offset}")
