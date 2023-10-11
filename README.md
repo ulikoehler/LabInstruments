@@ -46,7 +46,7 @@ Place this script in the directory where the `LabInstruments` directory is locat
 
 ```
 #!/usr/bin/env python3
-import visa
+import pyvisa
 from LabInstruments.DL3000 import DL3000
 
 rm = visa.ResourceManager()
