@@ -49,7 +49,7 @@ Place this script in the directory where the `LabInstruments` directory is locat
 import pyvisa
 from LabInstruments.DL3000 import DL3000
 
-rm = visa.ResourceManager()
+rm = pyvisa.ResourceManager()
 inst = DL3021(rm.open_resource('USB0::6833::3601::DL3A204100212::0::INSTR'))
 # Reset to factory settings (always do this to ensure a 100% consistent state)
 inst.reset()
