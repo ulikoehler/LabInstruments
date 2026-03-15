@@ -73,6 +73,10 @@ class DL3000(object):
         """
         return self.inst.write(":SOURCE:CURRENT:LEV:IMM {}".format(current))
 
+    def set_cv_voltage(self, voltage):
+        """Set the target voltage in CV mode."""
+        return self.inst.write(f":SOURCE:VOLTAGE:LEV:IMM {voltage}")
+
     def set_cp_power(self, power):
         """
         Set CP power limit
